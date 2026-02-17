@@ -128,7 +128,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const appUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "http://localhost:8080";
+    // Dynamically determine the app URL
+    // Priority: Environment Variable > Request Origin > Fallback
+    const origin = req.headers.get("origin");
+    const envUrl = Deno.env.get("APP_URL");
+    const appUrl = envUrl || origin || "https://your-default-deployed-url.lovable.app";
+
     const signatureLink = `${appUrl}/sign-document/${documentId}?token=${tokenData.token}`;
 
     console.log('Sending email to:', recipientEmail);
