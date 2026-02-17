@@ -58,20 +58,22 @@ export const AuthenticatedIndex = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex w-full relative overflow-hidden">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-yellow-400/30 to-orange-400/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-gradient-to-br from-green-400/30 to-blue-400/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <AuthenticatedSidebar activeView={activeView} onViewChange={setActiveView} />
-      <main className="flex-1 overflow-auto relative z-10">
-        <div className="animate-fade-in">
-          {renderContent()}
-        </div>
-      </main>
+  // Add 'fixed' position to the background container to stop it from moving with content
+  <div className="min-h-screen flex w-full relative overflow-hidden bg-background/50">
+    {/* Background Blobs - Ensure pointer-events-none is strictly applied */}
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
     </div>
+
+    <AuthenticatedSidebar activeView={activeView} onViewChange={setActiveView} />
+
+    {/* Ensure main content is clearly layered above background */}
+    <main className="flex-1 overflow-y-auto relative z-10 h-screen">
+      <div className="animate-fade-in p-6">
+        {renderContent()}
+      </div>
+    </main>
+  </div>
   );
 };
