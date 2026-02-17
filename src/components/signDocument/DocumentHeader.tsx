@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 
 interface DocumentHeaderProps {
@@ -26,6 +25,7 @@ export const DocumentHeader = ({ document }: DocumentHeaderProps) => {
           <p className="text-muted-foreground mt-1">Document ID: {document.id}</p>
         </div>
         <Badge variant={getStatusColor(document.status)}>
+          {/* Using regex with global flag /_/g to replace ALL underscores with spaces */}
           {document.status.replace(/_/g, ' ').toUpperCase()}
         </Badge>
       </div>
