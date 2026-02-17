@@ -1,127 +1,149 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export const ProfileSettings = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { user, profile } = useAuth();
-  const [profileData, setProfileData] = useState({
-    fullName: "",
-    email: "",
-    company: "",
-    bio: "",
-    signature: ""
-  });
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    avatar_url: "",
+  });
 
   useEffect(() => {
-    if (profile || user) {
-      const name = profile?.full_name || user?.user_metadata?.full_name || "";
-      setProfileData({
-        fullName: name,
-        email: profile?.email || user?.email || "",
-        company: "",
-        bio: "",
-        signature: `${name}\n${profile?.email || user?.email || ""}`
-      });
-    }
-  }, [profile, user]);
+    const fetchProfile = async () => {
+      if (!user) return;
 
-  const handleInputChange = (field: string, value: string) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
-  };
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
 
-  const handleSaveProfile = async () => {
+        if (error) throw error;
+
+        if (data) {
+          setProfile({
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+            email: user.email || "",
+            avatar_url: data.avatar_url || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const handleSave = async () => {
     if (!user) return;
-    setIsLoading(true);
+    setSaving(true);
+
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          full_name: profileData.fullName,
-          updated_at: new Date().toISOString()
+        .from("profiles")
+        .update({
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          avatar_url: profile.avatar_url,
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (error) throw error;
 
-      toast({ title: "Profile Updated", description: "Your profile has been successfully updated." });
-    } catch (error: any) {
-      toast({ title: "Error", description: "Failed to update profile: " + error.message, variant: "destructive" });
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Card className="hover-scale hover:shadow-lg transition-shadow">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Personal Information
-          </CardTitle>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>
+            Update your personal details and how others see you.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
-            <Input 
-              id="fullName" 
-              value={profileData.fullName}
-              onChange={(e) => handleInputChange('fullName', e.target.value)}
-              className="h-11" 
-            />
+        <CardContent className="space-y-6">
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={profile.avatar_url} />
+              <AvatarFallback className="text-lg">
+                {profile.first_name?.[0]}{profile.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <Button variant="outline">Change Avatar</Button>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={profileData.email}
-              disabled
-              className="h-11 bg-muted" 
-            />
-            <p className="text-xs text-muted-foreground">Email cannot be changed here.</p>
-          </div>
-          
-          <Button 
-            onClick={handleSaveProfile}
-            disabled={isLoading}
-            className="w-full md:w-auto h-11 px-6"
-          >
-            {isLoading ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
-            ) : (
-              <><Save className="h-4 w-4 mr-2" />Save Changes</>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
 
-      <Card className="hover-scale hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-lg">Company Signature</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="signature" className="text-sm font-medium">Default Signature Block</Label>
-            <Textarea 
-              id="signature" 
-              placeholder="This will appear in your documents..."
-              rows={4}
-              value={profileData.signature}
-              onChange={(e) => handleInputChange('signature', e.target.value)}
-              className="min-h-[100px] resize-none"
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={profile.first_name}
+                onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                value={profile.last_name}
+                onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
+              />
+            </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input id="email" value={profile.email} disabled />
+            <p className="text-xs text-muted-foreground">
+              Email cannot be changed here. Contact support for help.
+            </p>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
         </CardContent>
       </Card>
     </div>
