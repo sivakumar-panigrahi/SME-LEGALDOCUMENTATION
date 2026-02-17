@@ -95,7 +95,7 @@
     /* Prevent horizontal "drifting" */
     overflow-x: hidden;
     width: 100vw;
-    min-h-screen;
+    @apply min-h-screen;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
     background-size: 400% 400%;

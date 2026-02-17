@@ -58,22 +58,23 @@ export const AuthenticatedIndex = () => {
     }
   };
 
-  // Add 'fixed' position to the background container to stop it from moving with content
-  <div className="min-h-screen flex w-full relative overflow-hidden bg-background/50">
-    {/* Background Blobs - Ensure pointer-events-none is strictly applied */}
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-    </div>
-
-    <AuthenticatedSidebar activeView={activeView} onViewChange={setActiveView} />
-
-    {/* Ensure main content is clearly layered above background */}
-    <main className="flex-1 overflow-y-auto relative z-10 h-screen">
-      <div className="animate-fade-in p-6">
-        {renderContent()}
+  return (
+    // Add 'fixed' position to the background container to stop it from moving with content
+    <div className="min-h-screen flex w-full relative overflow-hidden bg-background/50">
+      {/* Background Blobs - Ensure pointer-events-none is strictly applied */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
       </div>
-    </main>
-  </div>
+
+      <AuthenticatedSidebar activeView={activeView} onViewChange={setActiveView} />
+
+      {/* Ensure main content is clearly layered above background */}
+      <main className="flex-1 overflow-y-auto relative z-10 h-screen">
+        <div className="animate-fade-in p-6">
+          {renderContent()}
+        </div>
+      </main>
+    </div>
   );
 };
