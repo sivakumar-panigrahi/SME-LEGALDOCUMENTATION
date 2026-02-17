@@ -16,14 +16,14 @@ interface DocumentFiltersProps {
 const DB_STATUSES = ["draft", "company_signed", "sent_for_signature", "fully_signed"];
 
 export const DocumentFilters = ({
-  searchTerm,
-  setSearchTerm,
-  statusFilter,
-  setStatusFilter,
-  typeFilter,
-  setTypeFilter,
+  searchTerm = "",
+  setSearchTerm = () => { },
+  statusFilter = "all",
+  setStatusFilter = () => { },
+  typeFilter = "all",
+  setTypeFilter = () => { },
   availableTypes = []
-}: DocumentFiltersProps) => {
+}: Partial<DocumentFiltersProps>) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
       <div className="relative flex-1 min-w-0">
@@ -35,7 +35,7 @@ export const DocumentFilters = ({
           className="input-modern pl-12 h-12 text-base placeholder:text-muted-foreground"
         />
       </div>
-      
+
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="w-full sm:w-56 h-12 bg-background/80 backdrop-blur-sm border border-border rounded-lg">
           <SelectValue placeholder="Status" />

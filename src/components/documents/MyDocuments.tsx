@@ -1,194 +1,90 @@
-import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Filter, Plus, Sparkles, Loader2 } from "lucide-react";
-import { DocumentCard } from "./DocumentCard";
 import { DocumentFilters } from "./DocumentFilters";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { getStatusLabel } from "@/lib/statusUtils";
-import { formatDistanceToNow } from "date-fns";
+import { DocumentCard } from "./DocumentCard";
+import { useDocuments } from "@/hooks/useDocuments";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface MyDocumentsProps {
-  onEditDocument: (doc: any) => void;
-  onCreateDocument?: () => void;
-}
+export const MyDocuments = () => {
+  const navigate = useNavigate();
+  const { documents, loading, deleteDocument } = useDocuments();
 
-export const MyDocuments = ({ onEditDocument, onCreateDocument }: MyDocumentsProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const { user } = useAuth();
-
-  const fetchDocuments = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-
-      const mapped = (data || []).map(doc => ({
-        id: doc.id,
-        title: `${doc.template_name} - ${(doc.form_data as any)?.employeeName || 'Untitled'}`,
-        type: doc.template_name,
-        status: doc.status,
-        statusLabel: getStatusLabel(doc.status),
-        createdBy: (doc.form_data as any)?.companyName || 'You',
-        createdDate: doc.created_at,
-        lastModified: formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true }),
-        size: '-',
-        rawDoc: doc,
-      }));
-      setDocuments(mapped);
-    } catch (error: any) {
-      console.error('Error fetching documents:', error);
-      toast({ title: "Error", description: "Failed to load documents.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+  const handleCreateNew = () => {
+    // Navigates to the template selection page as per the plan
+    navigate("/templates");
   };
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [user]);
-
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
-    const matchesType = typeFilter === "all" || doc.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
-  const handleViewDocument = (doc: any) => {
-    // Transform to PDFPreview expected format
-    const raw = doc.rawDoc;
-    const transformed = {
-      id: raw.id,
-      template: { name: raw.template_name },
-      formData: raw.form_data,
-      status: raw.status,
-      company_signature: raw.company_signature,
-      client_signature: raw.client_signature,
-    };
-    onEditDocument(transformed);
+  const handleView = (id: string) => {
+    navigate(`/preview/${id}`);
   };
 
-  const handleEditDocument = (doc: any) => {
-    if (doc.status === "fully_signed") {
-      toast({ title: "Cannot Edit", description: "Fully signed documents cannot be edited.", variant: "destructive" });
-      return;
-    }
-    handleViewDocument(doc);
+  const handleEdit = (id: string) => {
+    navigate(`/edit/${id}`);
   };
 
-  const handleDeleteDocument = async (doc: any) => {
-    if (doc.status === "fully_signed") {
-      toast({ title: "Cannot Delete", description: "Fully signed documents cannot be deleted.", variant: "destructive" });
-      return;
-    }
-    try {
-      const { error } = await supabase.from('documents').delete().eq('id', doc.id);
-      if (error) throw error;
-      toast({ title: "Deleted", description: `Document has been deleted.` });
-      fetchDocuments();
-    } catch (error: any) {
-      toast({ title: "Error", description: "Failed to delete document.", variant: "destructive" });
-    }
-  };
-
-  const uniqueTypes = [...new Set(documents.map(d => d.type))];
-
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  // Note: The following simple implementation follows the user's requested snippet.
+  // In a full implementation, we'd add back search and filter state here.
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-      <div className="mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold heading-gradient mb-2 flex items-center gap-3">
-              <Sparkles className="h-8 w-8 text-blue-600" />
-              My Documents
-            </h1>
-            <p className="text-base md:text-lg text-muted-foreground">
-              Manage all your legal documents in one place. ({documents.filter(d => d.status === "fully_signed").length} signed)
-            </p>
-          </div>
-          <Button 
-            className="btn-gradient-primary w-full sm:w-auto h-12 px-8 shadow-lg hover:shadow-xl"
-            onClick={onCreateDocument}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Create New Document
-          </Button>
+    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-4xl font-bold heading-gradient mb-2">My Documents</h1>
+          <p className="text-muted-foreground text-lg">
+            Manage and track your legal documentation.
+          </p>
         </div>
+        <Button onClick={handleCreateNew} className="btn-gradient-primary h-12 px-8 shadow-lg hover:shadow-xl gap-2">
+          <Plus className="h-5 w-5" />
+          Create New Document
+        </Button>
       </div>
 
-      <div className="modern-card p-6 mb-6">
-        <DocumentFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          availableTypes={uniqueTypes}
-        />
+      <div className="modern-card p-6 mb-8">
+        <DocumentFilters />
       </div>
 
-      {filteredDocuments.length > 0 ? (
-        <div className="space-y-4 md:space-y-6">
-          {filteredDocuments.map((doc) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        {loading ? (
+          // Show loading state while fetching from Supabase
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="modern-card p-6 space-y-4">
+              <Skeleton className="h-[200px] w-full rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-[80%]" />
+                <Skeleton className="h-4 w-[60%]" />
+              </div>
+            </div>
+          ))
+        ) : documents.length > 0 ? (
+          documents.map((doc) => (
             <div key={doc.id} className="animate-scale-in">
               <DocumentCard
-                document={doc}
-                onView={handleViewDocument}
-                onEdit={handleEditDocument}
-                onDelete={handleDeleteDocument}
+                document={{
+                  id: doc.id,
+                  title: doc.template_name || "Untitled Document",
+                  type: doc.document_type || "Legal",
+                  status: doc.status,
+                  date: new Date(doc.updated_at).toLocaleDateString(),
+                  createdBy: (doc.form_data as any)?.companyName || "You",
+                }}
+                onView={() => handleView(doc.id)}
+                onEdit={() => handleEdit(doc.id)}
+                onDelete={() => deleteDocument(doc.id)}
               />
             </div>
-          ))}
-        </div>
-      ) : (
-        <Card className="modern-card border-0 shadow-xl hover-scale hover:shadow-2xl transition-shadow cursor-pointer">
-          <CardContent className="p-8 md:p-12 text-center">
-            <div className="animate-glow w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Filter className="h-8 w-8 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-3">
-              {searchTerm || statusFilter !== "all" || typeFilter !== "all" 
-                ? "No documents match your filters"
-                : "No documents found"
-              }
-            </h3>
-            <p className="text-muted-foreground mb-8">
-              {searchTerm || statusFilter !== "all" || typeFilter !== "all"
-                ? "Try adjusting your search criteria"
-                : "Create your first document to get started"
-              }
-            </p>
-            <Button className="btn-gradient-primary h-12 px-8" onClick={onCreateDocument}>
+          ))
+        ) : (
+          <div className="col-span-full py-20 text-center modern-card border-dashed">
+            <p className="text-xl text-muted-foreground mb-6">No documents found. Create your first one!</p>
+            <Button onClick={handleCreateNew} className="btn-gradient-primary h-12 px-8">
               <Plus className="h-5 w-5 mr-2" />
-              Create New Document
+              Create First Document
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

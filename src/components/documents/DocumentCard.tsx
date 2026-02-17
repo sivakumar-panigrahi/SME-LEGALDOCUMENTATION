@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { 
+import {
   Eye, Edit, Download, Trash2, CheckCircle, Clock, PenTool, Mail, MoreVertical
 } from "lucide-react";
 import {
@@ -75,7 +75,7 @@ export const DocumentCard = ({ document, onView, onEdit, onDelete }: DocumentCar
                 </Badge>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -83,11 +83,11 @@ export const DocumentCard = ({ document, onView, onEdit, onDelete }: DocumentCar
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                <span className="truncate">By {document.createdBy}</span>
+                <span className="truncate">By {document.createdBy || 'Unknown'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span className="truncate">{document.lastModified}</span>
+                <span className="truncate">{document.lastModified || document.date || 'Recently'}</span>
               </div>
             </div>
           </div>
