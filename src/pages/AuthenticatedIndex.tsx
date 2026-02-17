@@ -17,12 +17,7 @@ export const AuthenticatedIndex = () => {
   const renderContent = () => {
     switch (activeView) {
       case "dashboard":
-        return (
-          <Dashboard 
-            onCreateDocument={() => setActiveView("templates")} 
-            onViewChange={setActiveView}
-          />
-        );
+        return <Dashboard />;
       case "templates":
         return (
           <TemplateLibrary
@@ -33,15 +28,7 @@ export const AuthenticatedIndex = () => {
           />
         );
       case "documents":
-        return (
-          <MyDocuments 
-            onEditDocument={(doc) => {
-              setCurrentDocument(doc);
-              setActiveView("preview");
-            }}
-            onCreateDocument={() => setActiveView("templates")}
-          />
-        );
+        return <MyDocuments />;
       case "form":
         return (
           <DocumentForm
@@ -67,12 +54,7 @@ export const AuthenticatedIndex = () => {
       case "settings":
         return <Settings />;
       default:
-        return (
-          <Dashboard 
-            onCreateDocument={() => setActiveView("templates")} 
-            onViewChange={setActiveView}
-          />
-        );
+        return <Dashboard />;
     }
   };
 
