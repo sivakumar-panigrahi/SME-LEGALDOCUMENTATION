@@ -67,11 +67,11 @@ const handler = async (req: Request): Promise<Response> => {
     const userId = claimsData.claims.sub;
 
     const requestBody = await req.json();
-    const { 
-      documentId, 
-      recipientEmail, 
-      recipientName, 
-      companyName, 
+    const {
+      documentId,
+      recipientEmail,
+      recipientName,
+      companyName,
       documentType
     }: EmailRequest = requestBody;
 
@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const appUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "https://dcetsexykugrmfjixgal.lovable.app";
+    const appUrl = Deno.env.get("APP_URL") || req.headers.get("origin") || "http://localhost:8080";
     const signatureLink = `${appUrl}/sign-document/${documentId}?token=${tokenData.token}`;
 
     console.log('Sending email to:', recipientEmail);
@@ -191,8 +191,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error logging email:', logError);
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return new Response(JSON.stringify({
+      success: true,
       emailId: emailResponse.data?.id,
       message: 'Email sent successfully',
       signatureLink: signatureLink
@@ -202,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-document-email function:", error);
-    
+
     return new Response(
       JSON.stringify({ error: 'Internal server error', success: false }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
