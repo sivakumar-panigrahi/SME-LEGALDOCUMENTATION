@@ -90,18 +90,29 @@
     @apply border-border;
   }
 
+  html,
+  body {
+    /* Prevent the bounce effect at the top and bottom of the page */
+    overscroll-behavior-y: none;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Lock the root container */
+  }
+
   body {
     @apply text-foreground;
-    /* Prevent horizontal "drifting" */
-    overflow-x: hidden;
-    width: 100vw;
-    @apply min-h-screen;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
     background-size: 400% 400%;
     animation: gradientShift 15s ease infinite;
     /* Ensure background is fixed so it doesn't move when scrolling */
     background-attachment: fixed;
+    position: fixed;
+    /* Hard lock for the background layer */
+    inset: 0;
   }
 
   /* Make sure the decorative blobs are strictly behind everything */
