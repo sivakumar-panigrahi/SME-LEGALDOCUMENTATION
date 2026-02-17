@@ -7,12 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Copy, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Copy,
   Filter,
   BookOpen,
   FileText
@@ -21,7 +21,7 @@ import {
 const clauseCategories = [
   "All",
   "Payment",
-  "Termination", 
+  "Termination",
   "Intellectual Property",
   "Confidentiality",
   "Liability",
@@ -76,7 +76,13 @@ const savedClauses = [
   }
 ];
 
+const STORAGE_KEY = "legalflow_clause_library";
+
 export const ClauseLibrary = () => {
+  const [clauses, setClauses] = useState<any[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : savedClauses;
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -89,11 +95,15 @@ export const ClauseLibrary = () => {
   });
   const { toast } = useToast();
 
-  const filteredClauses = savedClauses.filter(clause => {
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clauses));
+  }, [clauses]);
+
+  const filteredClauses = clauses.filter(clause => {
     const matchesSearch = clause.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         clause.description.toLowerCase().includes(searchTerm.toLowerCase());
+      clause.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || clause.category === selectedCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -107,13 +117,32 @@ export const ClauseLibrary = () => {
       return;
     }
 
-    toast({
-      title: "Clause Added",
-      description: `"${newClause.title}" has been added to your library.`,
-    });
-    
-    setIsAddModalOpen(false);
-    setNewClause({ title: "", description: "", category: "", content: "" });
+    if (editingClause) {
+      setClauses(prev => prev.map(c =>
+        c.id === editingClause.id
+          ? { ...c, ...newClause, lastUsed: "Just now" }
+          : c
+      ));
+      toast({
+        title: "Clause Updated",
+        description: `"${newClause.title}" has been updated.`,
+      });
+    } else {
+      const id = Math.max(0, ...clauses.map(c => c.id)) + 1;
+      const clauseWithId = {
+        ...newClause,
+        id,
+        lastUsed: "Never",
+        usageCount: 0
+      };
+      setClauses(prev => [clauseWithId, ...prev]);
+      toast({
+        title: "Clause Added",
+        description: `"${newClause.title}" has been added to your library.`,
+      });
+    }
+
+    closeModal();
   };
 
   const handleEditClause = (clause: any) => {
@@ -136,6 +165,7 @@ export const ClauseLibrary = () => {
   };
 
   const handleDeleteClause = (clause: any) => {
+    setClauses(prev => prev.filter(c => c.id !== clause.id));
     toast({
       title: "Clause Deleted",
       description: `"${clause.title}" has been removed from your library.`,
@@ -175,7 +205,7 @@ export const ClauseLibrary = () => {
             className="pl-10"
           />
         </div>
-        
+
         <div className="flex gap-2 overflow-x-auto">
           {clauseCategories.map((category) => (
             <Button
@@ -212,49 +242,49 @@ export const ClauseLibrary = () => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="mb-4">
                   <p className="text-sm text-gray-700 line-clamp-3">
                     {clause.content}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                   <span>Used {clause.usageCount} times</span>
                   <span>Last used {clause.lastUsed}</span>
                 </div>
-                
+
                 <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="flex-1"
                     onClick={() => handleAddToDocument(clause)}
                   >
                     <FileText className="h-4 w-4 mr-1" />
                     Add to Document
                   </Button>
-                  
-                  <Button 
-                    variant="ghost" 
+
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => handleCopyClause(clause)}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
-                  
-                  <Button 
-                    variant="ghost" 
+
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => handleEditClause(clause)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="text-red-600 hover:text-red-700"
                     onClick={() => handleDeleteClause(clause)}
                   >
@@ -270,7 +300,7 @@ export const ClauseLibrary = () => {
           <CardContent className="p-12 text-center">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm || selectedCategory !== "All" 
+              {searchTerm || selectedCategory !== "All"
                 ? "No clauses match your filters"
                 : "No saved clauses yet"
               }
@@ -306,7 +336,7 @@ export const ClauseLibrary = () => {
                   placeholder="e.g., Standard Confidentiality Clause"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Input
@@ -316,7 +346,7 @@ export const ClauseLibrary = () => {
                   placeholder="Brief description of what this clause covers"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Input
@@ -326,7 +356,7 @@ export const ClauseLibrary = () => {
                   placeholder="e.g., Confidentiality, Payment, Termination"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="content">Clause Content *</Label>
                 <Textarea
@@ -337,16 +367,16 @@ export const ClauseLibrary = () => {
                   rows={8}
                 />
               </div>
-              
+
               <div className="flex space-x-3 pt-4">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={closeModal}
                   className="flex-1"
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={handleAddClause}
                   className="flex-1"
                   disabled={!newClause.title || !newClause.content}
