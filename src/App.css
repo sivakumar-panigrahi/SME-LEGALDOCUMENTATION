@@ -1,1 +1,14 @@
 /* App styles - cleaned up */
+/* Removed Vite boilerplate that was constraining layout */
+
+#root {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    width: 100%;
+}
