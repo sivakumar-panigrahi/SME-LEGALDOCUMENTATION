@@ -58,9 +58,62 @@ export const useDocuments = () => {
     }
   }, [toast]);
 
+  const updateDocumentStatus = useCallback(async (id: string, status: string, signature?: string) => {
+    try {
+      const updateData: any = { 
+        status, 
+        updated_at: new Date().toISOString() 
+      };
+      
+      if (signature) {
+        // Logic for adding signature based on status
+        if (status === 'company_signed' || status === 'sent_for_signature') {
+          updateData.company_signature = signature;
+        } else if (status === 'fully_signed') {
+          updateData.client_signature = signature;
+        }
+      }
+
+      const { error } = await supabase
+        .from('documents')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchDocuments(); // Refresh the list
+      return true;
+    } catch (error) {
+      console.error('Error updating document:', error);
+      return false;
+    }
+  }, [fetchDocuments]);
+
+  const signDocumentByToken = useCallback(async (token: string, signature: string) => {
+    try {
+      const { data, error } = await supabase.rpc('sign_document_by_token', {
+        access_token: token,
+        signature_text: signature
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error signing by token:', error);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  return { documents, loading, deleteDocument, refetch: fetchDocuments };
+  return { 
+    documents, 
+    loading, 
+    deleteDocument, 
+    updateDocumentStatus,
+    signDocumentByToken,
+    refetch: fetchDocuments 
+  };
 };
